@@ -3,3 +3,4 @@ langchain
 cohere
 faiss-cpu
 docx
+langchain-community
