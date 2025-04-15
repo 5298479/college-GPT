@@ -8,7 +8,7 @@ import os
 from docx import Document
 import json
 from io import StringIO
-import request
+import requests
 
 # Page Configuration
 st.set_page_config(page_title="CollegeGPT", layout="wide")
@@ -54,12 +54,16 @@ st.markdown("""
 
 # Load Word Document
 def load_word_document(doc_path):
-     try:
-        response = requests.get(url)
+        try:
+        response = requests.get(doc_path)
         response.raise_for_status()
         with open("temp.docx", "wb") as f:
             f.write(response.content)
-        return load_word_document("temp.docx")
+        doc = Document("temp.docx")
+        full_text = []
+        for para in doc.paragraphs:
+            full_text.append(para.text)
+        return '\n'.join(full_text)
     except Exception as e:
         st.error(f"Failed to load document from URL: {e}")
         return ""
@@ -164,8 +168,9 @@ if uploaded_file is not None:
     save_sessions()
     st.success(f"Imported chat as '{new_title}'")
 
-# Load FAISS Index
-DOC_PATH = "https://github.com/5298479/college-GPT/raw/refs/heads/main/data/sample.docx"
+# Load FAISS Index  
+  DOC_PATH = "https://raw.githubusercontent.com/5298479/college-GPT/main/data/sample.docx"
+
 if os.path.exists(DOC_PATH):
     doc_text = load_word_document(DOC_PATH)
     embeddings = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
@@ -217,7 +222,7 @@ st.markdown("""
 # Title and Logo
 col1, col2 = st.columns([0.1, 0.9])
 with col1:
-    st.image("https://github.com/5298479/college-GPT/blob/main/logo.jpg", width=80)
+    st.image("https://raw.githubusercontent.com/5298479/college-GPT/main/logo.jpg", width=80)
 with col2:
     st.title("CollegeGPT")
 
