@@ -8,6 +8,7 @@ import os
 from docx import Document
 import json
 from io import StringIO
+import request
 
 # Page Configuration
 st.set_page_config(page_title="CollegeGPT", layout="wide")
@@ -53,11 +54,14 @@ st.markdown("""
 
 # Load Word Document
 def load_word_document(doc_path):
-    try:
-        doc = Document(doc_path)
-        return "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
+     try:
+        response = requests.get(url)
+        response.raise_for_status()
+        with open("temp.docx", "wb") as f:
+            f.write(response.content)
+        return load_word_document("temp.docx")
     except Exception as e:
-        st.error(f"Error loading document: {e}")
+        st.error(f"Failed to load document from URL: {e}")
         return ""
 
 # Persistent Save/Load
