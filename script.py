@@ -70,7 +70,7 @@ def load_word_document(doc_path):
 
 
 # Persistent Save/Load
-SAVE_PATH = "chat_sessions.json"
+SAVE_PATH = "https://github.com/5298479/college-GPT/raw/refs/heads/main/chat_sessions.json"
 
 def save_sessions():
     with open(SAVE_PATH, 'w') as f:
@@ -89,21 +89,21 @@ if "chat_sessions" not in st.session_state:
 if "session_to_rename" not in st.session_state:
     st.session_state.session_to_rename = None
 
-# Rename Session
-def rename_session(old_name, new_name):
-    if new_name and new_name != old_name and new_name not in st.session_state.chat_sessions:
-        # Copy chat to new name
-        st.session_state.chat_sessions[new_name] = st.session_state.chat_sessions.get(old_name, [])
-        # Delete old one
-        if old_name in st.session_state.chat_sessions:
-            del st.session_state.chat_sessions[old_name]
-        # Update active session reference
-        if st.session_state.active_session == old_name:
-            st.session_state.active_session = new_name
-        save_sessions()
+# # Rename Session
+# def rename_session(old_name, new_name):
+#     if new_name and new_name != old_name and new_name not in st.session_state.chat_sessions:
+#         # Copy chat to new name
+#         st.session_state.chat_sessions[new_name] = st.session_state.chat_sessions.get(old_name, [])
+#         # Delete old one
+#         if old_name in st.session_state.chat_sessions:
+#             del st.session_state.chat_sessions[old_name]
+#         # Update active session reference
+#         if st.session_state.active_session == old_name:
+#             st.session_state.active_session = new_name
+#         save_sessions()
 
-    # Reset rename state to hide input
-    st.session_state.session_to_rename = None
+#     # Reset rename state to hide input
+#     st.session_state.session_to_rename = None
 
 # Delete Session
 def delete_session(session_name):
