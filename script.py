@@ -169,22 +169,23 @@ if uploaded_file is not None:
     save_sessions()
     st.success(f"Imported chat as '{new_title}'")
 
-# Load FAISS Index  
-  DOC_PATH = "https://raw.githubusercontent.com/5298479/college-GPT/main/data/sample.docx"
+# Load FAISS Index
+DOC_PATH = "https://raw.githubusercontent.com/5298479/college-GPT/main/data/sample.docx"
+doc_text = load_word_document(DOC_PATH)
 
-if os.path.exists(DOC_PATH):
-    doc_text = load_word_document(DOC_PATH)
-    embeddings = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
-    store_filename = "word_doc_faiss.index"
-    if os.path.exists(store_filename):
-        vectorstore = FAISS.load_local(store_filename, embeddings, allow_dangerous_deserialization=True)
-    else:
-        vectorstore = FAISS.from_texts([doc_text], embedding=embeddings)
-        vectorstore.save_local(store_filename)
+embeddings = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
+store_filename = "word_doc_faiss.index"
 
-    retriever = vectorstore.as_retriever()
-    llm = Cohere(model="command", temperature=0.7, cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
-    qa_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+if os.path.exists(store_filename):
+    vectorstore = FAISS.load_local(store_filename, embeddings, allow_dangerous_deserialization=True)
+else:
+    vectorstore = FAISS.from_texts([doc_text], embedding=embeddings)
+    vectorstore.save_local(store_filename)
+
+retriever = vectorstore.as_retriever()
+llm = Cohere(model="command", temperature=0.7, cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
+qa_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+
 else:
     st.error("Document not found!")
     qa_chain = None
