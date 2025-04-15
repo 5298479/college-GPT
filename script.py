@@ -161,7 +161,7 @@ if uploaded_file is not None:
     st.success(f"Imported chat as '{new_title}'")
 
 # Load FAISS Index
-DOC_PATH = "https://github.com/5298479/college-GPT/blob/main/data/sample.docx"
+DOC_PATH = "PK"
 if os.path.exists(DOC_PATH):
     doc_text = load_word_document(DOC_PATH)
     embeddings = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
