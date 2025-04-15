@@ -54,7 +54,7 @@ st.markdown("""
 
 # Load Word Document
 def load_word_document(doc_path):
-        try:
+    try:
         response = requests.get(doc_path)
         response.raise_for_status()
         with open("temp.docx", "wb") as f:
@@ -67,6 +67,7 @@ def load_word_document(doc_path):
     except Exception as e:
         st.error(f"Failed to load document from URL: {e}")
         return ""
+
 
 # Persistent Save/Load
 SAVE_PATH = "chat_sessions.json"
