@@ -186,9 +186,7 @@ retriever = vectorstore.as_retriever()
 llm = Cohere(model="command", temperature=0.7, cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
 qa_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
 
-else:
-    st.error("Document not found!")
-    qa_chain = None
+
 
 # Send Query
 def send_query():
