@@ -70,7 +70,7 @@ def load_word_document(doc_path):
 
 
 # Persistent Save/Load
-SAVE_PATH = "https://github.com/5298479/college-GPT/raw/refs/heads/main/chat_sessions.json"
+SAVE_PATH = "chat_sessions.json"
 
 def save_sessions():
     with open(SAVE_PATH, 'w') as f:
