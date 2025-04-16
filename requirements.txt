@@ -5,3 +5,5 @@ faiss-cpu
 docx
 langchain-community
 python-docx
+gspread
+oauth2client
