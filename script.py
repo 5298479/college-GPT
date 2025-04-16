@@ -6,51 +6,29 @@ from langchain_community.embeddings import CohereEmbeddings
 from langchain.chains import RetrievalQA
 import os
 from docx import Document
-import json
-from io import StringIO
 import requests
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import datetime
 
 # Page Configuration
 st.set_page_config(page_title="CollegeGPT", layout="wide")
 COHERE_API_KEY = "TjktIf31DNGNNff3WzWvr1n3UBybuOF1R1jpu1Xy"
 USER_AGENT = "mujtaba/1.0"
 
-# Load custom CSS dropdown style
-st.markdown("""
-    <style>
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        background-color: #fff;
-        min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-        z-index: 1;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    .dropdown-content button {
-        color: black;
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-        border: none;
-        background: none;
-        width: 100%;
-        text-align: left;
-        cursor: pointer;
-    }
-    .dropdown-content button:hover {
-        background-color: #f1f1f1;
-    }
-    .dropdown:hover .dropdown-content {
-        display: block;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Google Sheets Authentication
+def connect_to_gsheet():
+    scope = ["https://spreadsheets.google.com/feeds", 
+             "https://www.googleapis.com/auth/spreadsheets",
+             "https://www.googleapis.com/auth/drive.file",
+             "https://www.googleapis.com/auth/drive"]
+    
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
+    
+    # Replace with your actual spreadsheet name
+    sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1ouYGgQFkSKpURp-kF_yuJDo0RC7ZXEiWWPQUdDMQdPs/edit?gid=0")
+    return sheet.sheet1
 
 # Load Word Document
 def load_word_document(doc_path):
@@ -68,42 +46,10 @@ def load_word_document(doc_path):
         st.error(f"Failed to load document from URL: {e}")
         return ""
 
-
-# Persistent Save/Load
-SAVE_PATH = "chat_sessions.json"
-
-def save_sessions():
-    with open(SAVE_PATH, 'w') as f:
-        json.dump(st.session_state.chat_sessions, f)
-
-def load_sessions():
-    if os.path.exists(SAVE_PATH):
-        with open(SAVE_PATH, 'r') as f:
-            return json.load(f)
-    return {"Default": []}
-
-# Initialize State
+# Initialize Session
 if "chat_sessions" not in st.session_state:
-    st.session_state.chat_sessions = load_sessions()
-    st.session_state.active_session = list(st.session_state.chat_sessions.keys())[0]
-if "session_to_rename" not in st.session_state:
-    st.session_state.session_to_rename = None
-
-# # Rename Session
-# def rename_session(old_name, new_name):
-#     if new_name and new_name != old_name and new_name not in st.session_state.chat_sessions:
-#         # Copy chat to new name
-#         st.session_state.chat_sessions[new_name] = st.session_state.chat_sessions.get(old_name, [])
-#         # Delete old one
-#         if old_name in st.session_state.chat_sessions:
-#             del st.session_state.chat_sessions[old_name]
-#         # Update active session reference
-#         if st.session_state.active_session == old_name:
-#             st.session_state.active_session = new_name
-#         save_sessions()
-
-#     # Reset rename state to hide input
-#     st.session_state.session_to_rename = None
+    st.session_state.chat_sessions = {"Default": []}
+    st.session_state.active_session = "Default"
 
 # Delete Session
 def delete_session(session_name):
@@ -113,61 +59,31 @@ def delete_session(session_name):
         st.session_state.active_session = remaining[0] if remaining else "Default"
         if not remaining:
             st.session_state.chat_sessions["Default"] = []
-        save_sessions()
-
+    
 # Sidebar Chat History
 st.sidebar.markdown("### Chat History")
-
 for session in list(st.session_state.chat_sessions.keys()):
     active = " (Active)" if session == st.session_state.active_session else ""
     with st.sidebar.container():
         col1, col2 = st.columns([0.75, 0.25])
         with col1:
-            if st.session_state.session_to_rename == session:
-                new_name = st.text_input("Rename", value=session, key=f"rename_input_{session}")
-                if st.session_state.get(f"rename_input_{session}") != session:
-                    rename_session(session, st.session_state[f"rename_input_{session}"])
-            else:
-                if st.button(session + active, key=f"select_{session}"):
-                    st.session_state.active_session = session
+            if st.button(session + active, key=f"select_{session}"):
+                st.session_state.active_session = session
 
         with col2:
             with st.expander("⋮", expanded=False):
                 if st.button("🗑 Delete", key=f"delete_{session}"):
                     delete_session(session)
                     st.rerun()
-                chat = st.session_state.chat_sessions[session]
-                output = StringIO()
-                for entry in chat:
-                    output.write(f"{entry['role'].capitalize()}: {entry['content']}\n")
-                st.download_button("📤 Export", output.getvalue(), file_name=f"{session}.txt", key=f"export_{session}")
 
 # New Chat
 def create_new_session():
     new_title = f"Chat {len(st.session_state.chat_sessions) + 1}"
     st.session_state.chat_sessions[new_title] = []
     st.session_state.active_session = new_title
-    save_sessions()
 
 st.sidebar.markdown("---")
 st.sidebar.button("➕ New Chat", on_click=create_new_session)
-
-# Import Chats
-uploaded_file = st.sidebar.file_uploader("Import Chat (.txt)", type="txt")
-if uploaded_file is not None:
-    content = uploaded_file.read().decode("utf-8")
-    lines = content.strip().split('\n')
-    imported_chat = []
-    for line in lines:
-        if line.startswith("User:"):
-            imported_chat.append({"role": "user", "content": line[5:].strip()})
-        elif line.startswith("Assistant:"):
-            imported_chat.append({"role": "assistant", "content": line[9:].strip()})
-    new_title = f"Imported {len(st.session_state.chat_sessions) + 1}"
-    st.session_state.chat_sessions[new_title] = imported_chat
-    st.session_state.active_session = new_title
-    save_sessions()
-    st.success(f"Imported chat as '{new_title}'")
 
 # Load FAISS Index
 DOC_PATH = "https://raw.githubusercontent.com/5298479/college-GPT/main/data/sample.docx"
@@ -185,8 +101,6 @@ else:
 retriever = vectorstore.as_retriever()
 llm = Cohere(model="command", temperature=0.7, cohere_api_key=COHERE_API_KEY, user_agent=USER_AGENT)
 qa_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
-
-
 
 # Send Query
 def send_query():
@@ -206,7 +120,19 @@ def send_query():
         st.session_state.chat_sessions[current_session].append({"role": "user", "content": user_input})
         st.session_state.chat_sessions[current_session].append({"role": "assistant", "content": answer})
         st.session_state.user_input = ""
-        save_sessions()
+        
+        # Log to Google Sheets
+        log_to_gsheet(current_session, "user", user_input)
+        log_to_gsheet(current_session, "assistant", answer)
+
+# Log to Google Sheets
+def log_to_gsheet(session_name, role, content):
+    try:
+        sheet = connect_to_gsheet()
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        sheet.append_row([timestamp, session_name, role, content])
+    except Exception as e:
+        st.error(f"Failed to log to Google Sheets: {e}")
 
 # Chat Styling
 st.markdown("""
