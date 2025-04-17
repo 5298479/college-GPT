@@ -7,6 +7,10 @@ from langchain.chains import RetrievalQA
 import os
 from docx import Document
 import requests
+import base64
+import json
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 
 # Page Configuration
@@ -30,7 +34,26 @@ def load_word_document(doc_path):
     except Exception as e:
         st.error(f"Failed to load document from URL: {e}")
         return ""
+# Load the base64-encoded Firebase key from Streamlit secrets
+encoded_key = st.secrets["FIREBASE_KEY_B64"]
+decoded_key = base64.b64decode(encoded_key).decode('utf-8')
+firebase_credentials = json.loads(decoded_key)
 
+# Initialize Firebase
+if not firebase_admin._apps:
+    cred = credentials.Certificate(firebase_credentials)
+    firebase_admin.initialize_app(cred)
+
+# Now you can interact with Firestore
+db = firestore.client()
+
+# Example: Save a chat log to Firebase
+def save_chat(user_msg, bot_response):
+    db.collection("chat_logs").add({
+        "user_message": user_msg,
+        "bot_response": bot_response,
+        "timestamp": firestore.SERVER_TIMESTAMP
+    })
 # Initialize Session
 if "chat_sessions" not in st.session_state:
     st.session_state.chat_sessions = {"Default": []}
