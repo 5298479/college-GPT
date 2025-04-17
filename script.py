@@ -41,7 +41,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 
-def save_chat(user_msg, bot_response):
+def save_chat(user_message, boot_response):
     from datetime import datetime
     data = {
         "user_message": user_message,
