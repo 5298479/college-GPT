@@ -125,11 +125,23 @@ def send_query():
                 current_session = new_title  # Update reference to avoid KeyError
 
         answer = qa_chain.run(user_input)
+        
+        # Save to Firestore after getting the response
+        save_chat(user_input, answer)
+        
+        # Append conversation to session
         st.session_state.chat_sessions[current_session].append({"role": "user", "content": user_input})
         st.session_state.chat_sessions[current_session].append({"role": "assistant", "content": answer})
         st.session_state.user_input = ""
         
-       
+def save_chat(user_msg, bot_response):
+    doc_ref = db.collection("chat_logs").add({
+        "user_message": user_msg,
+        "bot_response": bot_response,
+        "timestamp": firestore.SERVER_TIMESTAMP
+    })
+    print(f"Chat saved with ID: {doc_ref.id}")
+
 # Chat Styling
 st.markdown("""
     <style>
