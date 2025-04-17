@@ -7,28 +7,13 @@ from langchain.chains import RetrievalQA
 import os
 from docx import Document
 import requests
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import datetime
+
 
 # Page Configuration
 st.set_page_config(page_title="CollegeGPT", layout="wide")
 COHERE_API_KEY = "TjktIf31DNGNNff3WzWvr1n3UBybuOF1R1jpu1Xy"
 USER_AGENT = "mujtaba/1.0"
 
-# Google Sheets Authentication
-def connect_to_gsheet():
-    scope = ["https://spreadsheets.google.com/feeds", 
-             "https://www.googleapis.com/auth/spreadsheets",
-             "https://www.googleapis.com/auth/drive.file",
-             "https://www.googleapis.com/auth/drive"]
-    
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-    client = gspread.authorize(creds)
-    
-    # Replace with your actual spreadsheet name
-    sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1ouYGgQFkSKpURp-kF_yuJDo0RC7ZXEiWWPQUdDMQdPs/edit?gid=0")
-    return sheet.sheet1
 
 # Load Word Document
 def load_word_document(doc_path):
@@ -121,19 +106,7 @@ def send_query():
         st.session_state.chat_sessions[current_session].append({"role": "assistant", "content": answer})
         st.session_state.user_input = ""
         
-        # Log to Google Sheets
-        log_to_gsheet(current_session, "user", user_input)
-        log_to_gsheet(current_session, "assistant", answer)
-
-# Log to Google Sheets
-def log_to_gsheet(session_name, role, content):
-    try:
-        sheet = connect_to_gsheet()
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        sheet.append_row([timestamp, session_name, role, content])
-    except Exception as e:
-        st.error(f"Failed to log to Google Sheets: {e}")
-
+       
 # Chat Styling
 st.markdown("""
     <style>
