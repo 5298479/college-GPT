@@ -8,9 +8,8 @@ from docx import Document
 import requests
 import base64
 import json
-import firebase_admin
-from firebase_admin import credentials, firestore
-
+from supabase import create_client, Client
+from datetime import datetime
 
 # Page Configuration
 st.set_page_config(page_title="CollegeGPT", layout="wide")
@@ -34,27 +33,23 @@ def load_word_document(doc_path):
         st.error(f"Failed to load document from URL: {e}")
         return ""
 
-# Load the base64-encoded Firebase key from Streamlit secrets
-encoded_key = st.secrets["FIREBASE_KEY_B64"]
-decoded_key = base64.b64decode(encoded_key).decode('utf-8')
-firebase_credentials = json.loads(decoded_key)
+# Supabase credentials
+SUPABASE_URL = "https://wclnicdzfkhqiqopspln.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG5pY2R6ZmtocWlxb3BzcGxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MTg2MzgsImV4cCI6MjA2MDQ5NDYzOH0.l8soARQKIBpc4oSk9_3yfjU9VO5UeUq8mGFHyxOBvaE"
 
-# Initialize Firebase
-if not firebase_admin._apps:
-    cred = credentials.Certificate(firebase_credentials)
-    firebase_admin.initialize_app(cred)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Now you can interact with Firestore
-db = firestore.client()
 
-# Example: Save a chat log to Firebase
+
 def save_chat(user_msg, bot_response):
-    doc_ref = db.collection("chat_logs").add({
+    data = {
         "user_message": user_msg,
         "bot_response": bot_response,
-        "timestamp": firestore.SERVER_TIMESTAMP
-    })
-    print(f"Chat saved with ID: {doc_ref.id}")
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    response = supabase.table("chat_logs").insert(data).execute()
+    if response.error:
+        st.error(f"Failed to save chat: {response.error.message}")
 
 # Initialize Session
 if "chat_sessions" not in st.session_state:
