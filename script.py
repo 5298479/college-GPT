@@ -48,13 +48,12 @@ def save_chat(user_message, boot_response):
         "boot_response": boot_response,
         "timestamp": datetime.utcnow().isoformat()
     }
-    
-    # Attempt to insert into Supabase
+
     response = supabase.table("gpt").insert(data).execute()
-    
-    # Check if the response indicates an error (status code != 200)
-    if response.status_code != 200:
-        st.error(f"Failed to save chat: {response.data}")
+
+    # Check if the response contains an error attribute or if it's a failure
+    if hasattr(response, 'error') and response.error:
+        st.error(f"Failed to save chat: {response.error.message}")
     else:
         st.success("Chat saved successfully.")
 
