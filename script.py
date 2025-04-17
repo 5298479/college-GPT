@@ -128,13 +128,13 @@ def send_query():
 
         answer = qa_chain.run(user_input)
         
-        # # Save to Firestore after getting the response
-        # save_chat(user_input, answer)
+        # Save to Firestore after getting the response
+        save_chat(user_input, answer)
         
-        # # Append conversation to session
-        # st.session_state.chat_sessions[current_session].append({"role": "user", "content": user_input})
-        # st.session_state.chat_sessions[current_session].append({"role": "assistant", "content": answer})
-        # st.session_state.user_input = ""
+        # Append conversation to session
+        st.session_state.chat_sessions[current_session].append({"role": "user", "content": user_input})
+        st.session_state.chat_sessions[current_session].append({"role": "assistant", "content": answer})
+        st.session_state.user_input = ""
 
 # Chat Styling
 st.markdown("""
