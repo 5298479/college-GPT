@@ -42,14 +42,18 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 def save_chat(user_msg, bot_response):
+    from datetime import datetime
     data = {
         "user_message": user_msg,
         "bot_response": bot_response,
         "timestamp": datetime.utcnow().isoformat()
     }
     response = supabase.table("chat_logs").insert(data).execute()
+    
     if response.error:
         st.error(f"Failed to save chat: {response.error.message}")
+    else:
+        st.success("Chat saved successfully.")
 
 # Initialize Session
 if "chat_sessions" not in st.session_state:
