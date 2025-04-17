@@ -1,4 +1,3 @@
-# Streamlit UI
 import streamlit as st
 from langchain_community.llms import Cohere
 from langchain_community.vectorstores import FAISS
@@ -34,6 +33,7 @@ def load_word_document(doc_path):
     except Exception as e:
         st.error(f"Failed to load document from URL: {e}")
         return ""
+
 # Load the base64-encoded Firebase key from Streamlit secrets
 encoded_key = st.secrets["FIREBASE_KEY_B64"]
 decoded_key = base64.b64decode(encoded_key).decode('utf-8')
@@ -49,11 +49,13 @@ db = firestore.client()
 
 # Example: Save a chat log to Firebase
 def save_chat(user_msg, bot_response):
-    db.collection("chat_logs").add({
+    doc_ref = db.collection("chat_logs").add({
         "user_message": user_msg,
         "bot_response": bot_response,
         "timestamp": firestore.SERVER_TIMESTAMP
     })
+    print(f"Chat saved with ID: {doc_ref.id}")
+
 # Initialize Session
 if "chat_sessions" not in st.session_state:
     st.session_state.chat_sessions = {"Default": []}
@@ -67,7 +69,7 @@ def delete_session(session_name):
         st.session_state.active_session = remaining[0] if remaining else "Default"
         if not remaining:
             st.session_state.chat_sessions["Default"] = []
-    
+
 # Sidebar Chat History
 st.sidebar.markdown("### Chat History")
 for session in list(st.session_state.chat_sessions.keys()):
@@ -133,14 +135,6 @@ def send_query():
         st.session_state.chat_sessions[current_session].append({"role": "user", "content": user_input})
         st.session_state.chat_sessions[current_session].append({"role": "assistant", "content": answer})
         st.session_state.user_input = ""
-        
-def save_chat(user_msg, bot_response):
-    doc_ref = db.collection("chat_logs").add({
-        "user_message": user_msg,
-        "bot_response": bot_response,
-        "timestamp": firestore.SERVER_TIMESTAMP
-    })
-    print(f"Chat saved with ID: {doc_ref.id}")
 
 # Chat Styling
 st.markdown("""
