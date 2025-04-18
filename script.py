@@ -13,8 +13,8 @@ from datetime import datetime
 
 # Page Configuration
 st.set_page_config(page_title="CollegeGPT", layout="wide")
-COHERE_API_KEY = "TjktIf31DNGNNff3WzWvr1n3UBybuOF1R1jpu1Xy"
-USER_AGENT = "mujtaba/1.0"
+COHERE_API_KEY = os.environ.get("COHERE_API_KEY")
+USER_AGENT = os.environ.get("USER_AGENT", "mujtaba/1.0")
 
 
 # Load Word Document
@@ -34,11 +34,12 @@ def load_word_document(doc_path):
         return ""
 
 # Supabase credentials
-SUPABASE_URL = "https://wclnicdzfkhqiqopspln.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG5pY2R6ZmtocWlxb3BzcGxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MTg2MzgsImV4cCI6MjA2MDQ5NDYzOH0.l8soARQKIBpc4oSk9_3yfjU9VO5UeUq8mGFHyxOBvaE"
-
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+st.write("Cohere key loaded:", bool(COHERE_API_KEY))
+st.write("Supabase key loaded:", bool(SUPABASE_KEY))
 
 
 def save_chat(user_message, boot_response):
