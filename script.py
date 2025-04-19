@@ -38,8 +38,6 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.write("Cohere key loaded:", bool(COHERE_API_KEY))
-st.write("Supabase key loaded:", bool(SUPABASE_KEY))
 
 
 def save_chat(user_message, boot_response):
