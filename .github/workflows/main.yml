@@ -13,32 +13,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step to checkout the code
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step to set environment variables from secrets
+      # Step 2: Set environment variables
       - name: Set environment variables
         run: |
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
           echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> $GITHUB_ENV
 
-      # Step to install Python dependencies
+      # Step 3: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      # Step 4: Install dependencies
       - name: Install dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
 
-      # Step to run tests
-      - name: Run tests
+      # Step 5: Debug env variables (optional, useful for troubleshooting)
+      - name: Debug env variables
         run: |
-          source venv/bin/activate
-          pytest
+          echo "SUPABASE_URL=$SUPABASE_URL"
+          echo "SUPABASE_KEY=$SUPABASE_KEY"
 
-      # Step to deploy (placeholder - replace with your actual deployment command)
-      - name: Deploy application
+      # Step 6: Run your Streamlit app or Python script
+      - name: Run application
         run: |
           source venv/bin/activate
-          # Replace the following line with your actual deployment steps
-          echo "Deployment step goes here"
+          streamlit run script.py  # Replace with your actual script filename
