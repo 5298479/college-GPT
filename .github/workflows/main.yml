@@ -1,13 +1,44 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
+      # Step to checkout the code
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Step to set environment variables from secrets
       - name: Set environment variables
         run: |
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
           echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> $GITHUB_ENV
 
-      # Add other steps like installing dependencies, running Streamlit, etc.
+      # Step to install Python dependencies
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      # Step to run tests
+      - name: Run tests
+        run: |
+          source venv/bin/activate
+          pytest
+
+      # Step to deploy (placeholder - replace with your actual deployment command)
+      - name: Deploy application
+        run: |
+          source venv/bin/activate
+          # Replace the following line with your actual deployment steps
+          echo "Deployment step goes here"
